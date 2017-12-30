@@ -1,0 +1,22 @@
+{
+  "name": "promise-queue",
+  "version": "0.0.1",
+  "description": "Performs tasks in sequential order and returns Promises that resolve when those tasks complete",
+  "main": "index.js",
+  "scripts": {
+    "test": "clear && mocha"
+  },
+  "author": "",
+  "dependencies": {
+    "sinon": "^4.1.3",
+    "throat": "^4.1.0"
+  },
+  "devDependencies": {
+    "bluebird": "^3.5.0",
+    "chai": "^3.4.1",
+    "mocha": "^3.0.2"
+  },
+  "directories": {},
+  "keywords": [],
+  "license": "UNLICENSED"
+}
