@@ -1,20 +1,3 @@
 'use strict'
 
-module.exports = class PromiseQueue {
-
-  add () {
-
-  }
-
-  pause () {
-
-  }
-
-  resume () {
-
-  }
-
-  wait () {
-
-  }
-}
+module.exports = require('./src/promise-queue')

@@ -1,12 +1,12 @@
 'use strict'
 
-const PromiseQueue = require('../src/promise-queue')
+const PromiseQueue = require('../')
 const Promise = require('bluebird')
 const expect = require('chai').expect
 
 describe('PromiseQueue', function () {
   this.slow(3000)
-  this.timeout(15000)
+  this.timeout(3000)
 
   describe('constructor', () => {
     it('should create a stopped queue with length 0', () => {
@@ -22,7 +22,7 @@ describe('PromiseQueue', function () {
       const p = pq.add(() => {
         throw new Error('p')
       })
-      .then(() => {
+      p.then(() => {
         expect(true).to.equal('We should never get here')
       }).catch(err => {
         expect(err.message).to.equal('p')
@@ -31,7 +31,7 @@ describe('PromiseQueue', function () {
       const p2 = pq.add(() => {
         return Promise.reject(new Error('p2'))
       })
-      .then(() => {
+      p2.then(() => {
         expect(true).to.equal('We should never get here')
       }).catch(err => {
         expect(err.message).to.equal('p2')
@@ -40,23 +40,21 @@ describe('PromiseQueue', function () {
       const p3 = pq.add(() => {
         return 'p3'
       })
-      .then(val => {
+      p3.then(val => {
         expect(val).to.equal('p3')
-      }).catch((x) => {
+      }).catch(() => {
         expect(true).to.equal('We should never get here')
       })
 
       const p4 = pq.add(() => {
         return Promise.resolve('p4')
       })
-      .then(val => {
+      p4.then(val => {
         expect(val).to.equal('p4')
       }).catch(() => {
         expect(true).to.equal('We should never get here')
       })
-      //Next line added to prevent false positive test results
-      return Promise.all([p, p2, p3, p4])
-        .then(() => pq.wait());
+      return pq.wait()
     })
   })
 

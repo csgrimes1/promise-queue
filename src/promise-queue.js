@@ -6,10 +6,9 @@ const bluebird = require('bluebird')
 
 function deferTask (taskFunction, runCounter) {
   const deferred = defer();
-  const taskPromisified = bluebird.method(taskFunction)
   runCounter(1) //Count as queued, then decrement below after it runs
   return {
-    run: () => taskPromisified()
+    run: () => bluebird.try(taskFunction)
       .then(result => runCounter(-1) || deferred.resolve(result))
       .catch(err => runCounter(-1) || deferred.reject(err)),
     promise: deferred.promise
@@ -40,15 +39,16 @@ class PromiseQueue {
     const waitOutThePause = () => this.pauser.obey()
     const runCounter = (addend) => {
       this.count = this.count + addend
+      if (addend < 0)//Function ran, so we're un-counting it
+        this._checkWaiters()
     }
-    const checkWaiters = this._checkWaiters.bind(this)
     const newTasks = tasks.map(task => {
       const deferredTask = deferTask(task, runCounter)
       const waitThenRun = () => {
         return waitOutThePause().then(deferredTask.run)
       }
       this.serializeConcurrency(waitThenRun)
-      return deferredTask.promise.then((result) => checkWaiters() || result)
+      return deferredTask.promise
     });
     return newTasks.length === 1 ? newTasks[0] : Promise.all(newTasks)
   }

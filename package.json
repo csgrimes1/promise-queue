@@ -4,7 +4,8 @@
   "description": "Performs tasks in sequential order and returns Promises that resolve when those tasks complete",
   "main": "index.js",
   "scripts": {
-    "test": "clear && mocha"
+    "test": "clear && mocha",
+    "devtest": "mocha --recursive spec"
   },
   "author": "",
   "dependencies": {
