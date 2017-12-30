@@ -1,17 +1,14 @@
 'use strict';
 
-const defer = require('./defer')
 const stoplight = require('./stoplight')
 const bluebird = require('bluebird')
 
 function deferTask (taskFunction, runCounter) {
-  const deferred = defer();
   runCounter(1) //Count as queued, then decrement below after it runs
   return {
     run: () => bluebird.try(taskFunction)
-      .then(result => runCounter(-1) || deferred.resolve(result))
-      .catch(err => runCounter(-1) || deferred.reject(err)),
-    promise: deferred.promise
+      .then(result => runCounter(-1) || result)
+      .catch(err => runCounter(-1) || Promise.reject(err))
   }
 }
 
@@ -31,24 +28,25 @@ class PromiseQueue {
     this.pauser.setGreen()
   }
 
+  _count (addend) {
+    this.count = this.count + addend
+    if (addend < 0)//Function ran, so we're un-counting it
+    this._checkWaiters()
+  }
+
   add (... tasks) {
     if (tasks.length <= 0 )
       return Promise.resolve();
 
     this.waitblocker.setRed()
     const waitOutThePause = () => this.pauser.obey()
-    const runCounter = (addend) => {
-      this.count = this.count + addend
-      if (addend < 0)//Function ran, so we're un-counting it
-        this._checkWaiters()
-    }
+    const runCounter = (addend) => this._count(addend)
     const newTasks = tasks.map(task => {
       const deferredTask = deferTask(task, runCounter)
       const waitThenRun = () => {
         return waitOutThePause().then(deferredTask.run)
       }
-      this.serializeConcurrency(waitThenRun)
-      return deferredTask.promise
+      return this.serializeConcurrency(waitThenRun)
     });
     return newTasks.length === 1 ? newTasks[0] : Promise.all(newTasks)
   }
